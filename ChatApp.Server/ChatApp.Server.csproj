@@ -8,14 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Hubs\" />
+    <Folder Include="Models\" />
     <Folder Include="Models\" />
   </ItemGroup>
 
