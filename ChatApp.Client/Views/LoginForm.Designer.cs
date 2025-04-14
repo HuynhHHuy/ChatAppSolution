@@ -197,6 +197,7 @@ partial class LoginForm
         Controls.Add(label2);
         Controls.Add(label1);
         Name = "LoginForm";
+        RightToLeft = RightToLeft.No;
         Text = "Đăng nhập";
         Load += LoginForm_Load;
         ResumeLayout(false);
