@@ -165,6 +165,7 @@ partial class LoginForm
         btnSignUp.TabIndex = 11;
         btnSignUp.Text = "Tạo tài khoản";
         btnSignUp.UseVisualStyleBackColor = false;
+        btnSignUp.Click += btnSignUp_Click;
         // 
         // lbHelpText
         // 

@@ -1,3 +1,4 @@
+using ChatApp.Client.Views;
 using ChatApp.Common.DAO;
 
 namespace ChatApp.Client;
@@ -121,6 +122,16 @@ public partial class LoginForm : Form
     private void tbPassword_TextChanged(object sender, EventArgs e)
     {
         lbHelpText.Visible = false;
+    }
+
+    private void btnSignUp_Click(object sender, EventArgs e)
+    {
+        this.Hide();
+        using (RegisterForm registerForm = new RegisterForm())
+        {
+            registerForm.ShowDialog();
+        }
+        this.Close();
     }
 
 }

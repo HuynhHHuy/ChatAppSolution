@@ -33,5 +33,26 @@ namespace ChatApp.Common.DAO
             return false;
         }
 
+        public bool CheckExistEmail(string email)
+        {
+            string query = "SELECT email FROM Users WHERE email = @param0";
+            var parameters = new object[] { email };
+            var dataTable = DataProvider.Instance.ExcuteQuery(query, parameters);
+            return dataTable.Rows.Count > 0;
+        }
+
+        public int InsertAccountNotVerify(string email, string password, string randomCode, string name)
+        {
+            string query = "INSERT INTO Users (email, password, verify_code, full_name) VALUES (@param0, @param1, @param2, @param3)";
+            var parameters = new object[] { email, HandlePassword.HashPassword(password), randomCode, name };
+            return DataProvider.Instance.ExcuteNonQuery(query, parameters);
+        }
+
+        public int DeleteAccountByEmail(string email)
+        {
+            string query = "DELETE FROM Users WHERE email = @param0";
+            var parameters = new object[] { email };
+            return DataProvider.Instance.ExcuteNonQuery(query, parameters);
+        }
     }
 }
