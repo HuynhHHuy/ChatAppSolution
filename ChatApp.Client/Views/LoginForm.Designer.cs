@@ -53,7 +53,6 @@ partial class LoginForm
         label1.TabIndex = 0;
         label1.Text = "Zola";
         label1.TextAlign = ContentAlignment.MiddleCenter;
-        label1.Click += label1_Click;
         // 
         // label2
         // 
@@ -97,7 +96,6 @@ partial class LoginForm
         label3.Size = new Size(51, 23);
         label3.TabIndex = 4;
         label3.Text = "Email";
-        label3.Click += label3_Click;
         // 
         // label4
         // 
@@ -108,7 +106,6 @@ partial class LoginForm
         label4.Size = new Size(82, 23);
         label4.TabIndex = 5;
         label4.Text = "Mật khẩu";
-        label4.Click += label4_Click;
         // 
         // btnVisiblePassword
         // 
@@ -200,7 +197,6 @@ partial class LoginForm
         Name = "LoginForm";
         RightToLeft = RightToLeft.No;
         Text = "Đăng nhập";
-        Load += LoginForm_Load;
         ResumeLayout(false);
         PerformLayout();
     }

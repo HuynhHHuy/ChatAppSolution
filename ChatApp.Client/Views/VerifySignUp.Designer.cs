@@ -34,6 +34,8 @@
             btnBack = new Button();
             tbVerifyCode = new TextBox();
             lbHelpText = new Label();
+            llbReSend = new LinkLabel();
+            label3 = new Label();
             SuspendLayout();
             // 
             // label1
@@ -51,18 +53,20 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(161, 231);
+            label2.Font = new Font("Segoe UI", 10F);
+            label2.Location = new Point(140, 231);
             label2.Name = "label2";
-            label2.Size = new Size(412, 20);
+            label2.Size = new Size(480, 23);
             label2.TabIndex = 1;
             label2.Text = "Mã xác nhận đã được gửi về email của bạn, và sẽ hết hạn sau";
             // 
             // lbCountDown
             // 
             lbCountDown.AutoSize = true;
-            lbCountDown.Location = new Point(579, 231);
+            lbCountDown.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 163);
+            lbCountDown.Location = new Point(626, 226);
             lbCountDown.Name = "lbCountDown";
-            lbCountDown.Size = new Size(0, 23);
+            lbCountDown.Size = new Size(0, 31);
             lbCountDown.TabIndex = 2;
             lbCountDown.UseCompatibleTextRendering = true;
             // 
@@ -95,12 +99,36 @@
             lbHelpText.Size = new Size(0, 20);
             lbHelpText.TabIndex = 5;
             // 
+            // llbReSend
+            // 
+            llbReSend.AutoSize = true;
+            llbReSend.Font = new Font("Segoe UI", 12F);
+            llbReSend.Location = new Point(485, 276);
+            llbReSend.Name = "llbReSend";
+            llbReSend.Size = new Size(72, 28);
+            llbReSend.TabIndex = 6;
+            llbReSend.TabStop = true;
+            llbReSend.Text = "Gửi lại.";
+            llbReSend.LinkClicked += llbReSend_LinkClicked;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 12F);
+            label3.Location = new Point(229, 276);
+            label3.Name = "label3";
+            label3.Size = new Size(250, 28);
+            label3.TabIndex = 7;
+            label3.Text = "Bạn chưa nhận được email?";
+            // 
             // VerifySignUp
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
             ClientSize = new Size(800, 450);
+            Controls.Add(label3);
+            Controls.Add(llbReSend);
             Controls.Add(lbHelpText);
             Controls.Add(tbVerifyCode);
             Controls.Add(btnBack);
@@ -123,5 +151,7 @@
         private Button btnBack;
         private TextBox tbVerifyCode;
         private Label lbHelpText;
+        private LinkLabel llbReSend;
+        private Label label3;
     }
 }

@@ -1,46 +1,130 @@
-using ChatApp.Client.Views;
+Ôªøusing ChatApp.Client.Views;
 using ChatApp.Common.DAO;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace ChatApp.Client;
 
 public partial class LoginForm : Form
 {
+    private static readonly string secretKey = "6DOKMbMsMPPDBTLjdZAlEcFOktrQL7Yz";
+
     public LoginForm()
     {
         InitializeComponent();
+
+        string filePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Services\auth.txt"));
+
+        if (File.Exists(filePath))
+        {
+            try
+            {
+                string token = File.ReadAllText(filePath).Trim();
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    string currEmail = ExtractEmailFromToken(token);
+                    if (AccountDAO.Instance.CheckExistEmail(currEmail))
+                    {
+                        HandleLoginSuccess(currEmail);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("L·ªói khi ƒë·ªçc file: " + ex.Message);
+            }
+        }
+        /*else
+        {
+            MessageBox.Show("Kh√¥ng t√¨m th·∫•y file auth.txt.");
+        }*/
+
     }
 
-    private void LoginForm_Load(object sender, EventArgs e)
+    private static string GenerateToken(string email, int expireDays = 7)
     {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Email, email)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: "zola",
+            audience: "zola",
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(expireDays),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-    private void label1_Click(object sender, EventArgs e)
+    public static string ExtractEmailFromToken(string token)
     {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(secretKey);
 
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = "zola",
+            ValidateAudience = true,
+            ValidAudience = "zola",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+
+            var emailClaim = principal.FindFirst(ClaimTypes.Email);
+            return emailClaim?.Value;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
     }
 
-    private void label3_Click(object sender, EventArgs e)
+    private void HandleLoginSuccess(string email)
     {
-
+        string token = GenerateToken(email);
+        string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Services\auth.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        using (FileStream file = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+        using (StreamWriter writer = new StreamWriter(file))
+        {
+            writer.Write(token);
+        }
+       
+        this.Hide();
+        using (MainForm mainForm = new MainForm(email))
+        {
+            mainForm.ShowDialog();
+        }
+        this.Close();
     }
-
-    private void label4_Click(object sender, EventArgs e)
-    {
-
-    }
-
     private void btnVisiblePassword_Click(object sender, EventArgs e)
     {
         if (tbPassword.UseSystemPasswordChar)
         {
             tbPassword.UseSystemPasswordChar = false;
-            btnVisiblePassword.Text = "¬“n";
+            btnVisiblePassword.Text = "√ÇÃân";
         }
         else
         {
             tbPassword.UseSystemPasswordChar = true;
-            btnVisiblePassword.Text = "HiÍÚn";
+            btnVisiblePassword.Text = "Hi√™Ã£n";
         }
     }
 
@@ -63,21 +147,21 @@ public partial class LoginForm : Form
 
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            lbHelpText.Text = "Vui loÃng nh‚Úp email vaÃ m‚Út kh‚“u";
+            lbHelpText.Text = "Vui loÃÄng nh√¢Ã£p email vaÃÄ m√¢Ã£t kh√¢Ãâu";
             lbHelpText.ForeColor = Color.Red;
             lbHelpText.Visible = true;
             return;
         }
         else if (!isValidEmail(email))
         {
-            lbHelpText.Text = "Email khÙng hıÚp lÍÚ";
+            lbHelpText.Text = "Email kh√¥ng h∆°Ã£p l√™Ã£";
             lbHelpText.ForeColor = Color.Red;
             lbHelpText.Visible = true;
             return;
         }
         else if (password.Length < 6)
         {
-            lbHelpText.Text = "M‚Út kh‚“u pha“i coÏ iÏt nh‚Ït 6 kyÏ t˝Ú";
+            lbHelpText.Text = "M√¢Ã£t kh√¢Ãâu phaÃâi coÃÅ iÃÅt nh√¢ÃÅt 6 kyÃÅ t∆∞Ã£";
             lbHelpText.ForeColor = Color.Red;
             lbHelpText.Visible = true;
             return;
@@ -85,11 +169,11 @@ public partial class LoginForm : Form
 
         if (CheckAccount(email, password))
         {
-            MessageBox.Show("–„ng nh‚Úp thaÃnh cÙng", "ThÙng baÏo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            HandleLoginSuccess(email);
         }
         else
         {
-            lbHelpText.Text = "Email ho„Úc m‚Út kh‚“u khÙng uÏng";
+            lbHelpText.Text = "Email hoƒÉÃ£c m√¢Ã£t kh√¢Ãâu kh√¥ng ƒëuÃÅng";
             lbHelpText.ForeColor = Color.Red;
             lbHelpText.Visible = true;
             return;
