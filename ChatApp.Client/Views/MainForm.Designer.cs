@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             panel1 = new Panel();
+            btnLogout = new Button();
             ptbAvatar = new PictureBox();
             tableLayoutPanel1 = new TableLayoutPanel();
             tableLayoutPanel2 = new TableLayoutPanel();
@@ -51,12 +52,26 @@
             // panel1
             // 
             panel1.BackColor = Color.FromArgb(69, 165, 117);
+            panel1.Controls.Add(btnLogout);
             panel1.Controls.Add(ptbAvatar);
             panel1.Dock = DockStyle.Left;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
             panel1.Size = new Size(127, 589);
             panel1.TabIndex = 0;
+            // 
+            // btnLogout
+            // 
+            btnLogout.BackColor = Color.Red;
+            btnLogout.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 163);
+            btnLogout.ForeColor = Color.White;
+            btnLogout.Location = new Point(15, 518);
+            btnLogout.Name = "btnLogout";
+            btnLogout.Size = new Size(93, 39);
+            btnLogout.TabIndex = 1;
+            btnLogout.Text = "Đăng xuất";
+            btnLogout.UseVisualStyleBackColor = false;
+            btnLogout.Click += btnLogout_Click;
             // 
             // ptbAvatar
             // 
@@ -216,5 +231,6 @@
         private TableLayoutPanel tableLayoutPanel3;
         private Label label1;
         private Panel pnFriendList;
+        private Button btnLogout;
     }
 }

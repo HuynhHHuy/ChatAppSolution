@@ -15,30 +15,30 @@ namespace ChatApp.Server.Hubs
 
         public async Task SetOnline(string email)
         {
-            if (!UserConnections.ContainsKey(email))
-            {
-                UserConnections[email] = Context.ConnectionId;
-            }
+            Console.WriteLine($"[SetOnline] {email} is now online with ConnectionId: {Context.ConnectionId}");
 
+            UserConnections[email] = Context.ConnectionId;
             UserStatuses[email] = "online";
 
             var friends = GetUserFriends(email);
 
             foreach (var friend in friends)
             {
-                if (UserConnections.ContainsKey(friend))
+                if (UserConnections.TryGetValue(friend, out var friendConnectionId))
                 {
-                    await Clients.Client(UserConnections[friend]).SendAsync("FriendStatusChanged", email, "online");
+                    Console.WriteLine($"[NotifyFriend] Notifying {friend} about {email}'s online status (ConnectionId: {friendConnectionId})");
+                    await Clients.Client(friendConnectionId).SendAsync("FriendStatusChanged", email, "online");
+                }
+                else
+                {
+                    Console.WriteLine($"[NotifyFriend] {friend} is not connected, skipping.");
                 }
             }
         }
 
         public async Task SetOffline(string email)
         {
-            if (!UserConnections.ContainsKey(email))
-            {
-                UserConnections[email] = Context.ConnectionId;
-            }
+            Console.WriteLine($"[SetOffline] {email} is now offline");
 
             UserStatuses[email] = "offline";
 
@@ -46,10 +46,14 @@ namespace ChatApp.Server.Hubs
 
             foreach (var friend in friends)
             {
-                if (UserConnections.ContainsKey(friend))
+                if (UserConnections.TryGetValue(friend, out var friendConnectionId))
                 {
-                    await Clients.Client(UserConnections[friend])
-                                 .SendAsync("FriendStatusChanged", email, "Offline");
+                    Console.WriteLine($"[NotifyFriend] Notifying {friend} about {email}'s offline status (ConnectionId: {friendConnectionId})");
+                    await Clients.Client(friendConnectionId).SendAsync("FriendStatusChanged", email, "offline");
+                }
+                else
+                {
+                    Console.WriteLine($"[NotifyFriend] {friend} is not connected, skipping.");
                 }
             }
         }
@@ -59,8 +63,13 @@ namespace ChatApp.Server.Hubs
             var user = UserConnections.FirstOrDefault(x => x.Value == Context.ConnectionId);
             if (user.Key != null)
             {
+                Console.WriteLine($"[Disconnected] {user.Key} disconnected (ConnectionId: {Context.ConnectionId})");
                 UserConnections.Remove(user.Key);
                 await SetOffline(user.Key);
+            }
+            else
+            {
+                Console.WriteLine($"[Disconnected] Unknown user disconnected (ConnectionId: {Context.ConnectionId})");
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -68,14 +77,21 @@ namespace ChatApp.Server.Hubs
 
         private List<string> GetUserFriends(string email)
         {
-            List<UserDTO> listFriend = new List<UserDTO>();
+            try
+            {
+                var listFriend = FriendDAO.Instance.GetFriends(email);
+                var friendEmails = listFriend.Select(friend => friend.Email).ToList();
 
-            listFriend = FriendDAO.Instance.GetFriends(email);
+                Console.WriteLine($"[GetUserFriends] {email} has {friendEmails.Count} friends: {string.Join(", ", friendEmails)}");
 
-            List<string> friendEmails = listFriend.Select(friend => friend.Email).ToList();
-
-            return friendEmails;
+                return friendEmails;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GetUserFriends] Error for {email}: {ex.Message}");
+                return new List<string>();
+            }
         }
-
     }
+
 }

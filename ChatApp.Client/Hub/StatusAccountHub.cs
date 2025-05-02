@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ChatApp.Client.Hub
@@ -10,6 +8,7 @@ namespace ChatApp.Client.Hub
     public class StatusAccountHub
     {
         private HubConnection _connection;
+        private bool _isDisposed = false;
 
         public StatusAccountHub()
         {
@@ -18,41 +17,83 @@ namespace ChatApp.Client.Hub
                 .WithAutomaticReconnect()
                 .Build();
         }
+
         public async Task ConnectAsync(Action<string, string> onFriendStatusChanged)
         {
+            if (_isDisposed) return;
+
             _connection.On<string, string>("FriendStatusChanged", (friendEmail, status) =>
             {
-                onFriendStatusChanged?.Invoke(friendEmail, status);
+                if (!_isDisposed)
+                    onFriendStatusChanged?.Invoke(friendEmail, status);
             });
 
-            if (_connection.State == HubConnectionState.Disconnected)
+            try
             {
-                await _connection.StartAsync();
+                if (_connection.State == HubConnectionState.Disconnected)
+                {
+                    await _connection.StartAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ConnectAsync failed: {ex.Message}");
             }
         }
 
         public async Task SetOnline(string email)
         {
-            if (_connection.State == HubConnectionState.Disconnected)
-            {
-                await _connection.StartAsync();
-            }
+            if (_isDisposed) return;
 
-            await _connection.InvokeAsync("SetOnline", email);
+            try
+            {
+                if (_connection.State == HubConnectionState.Disconnected)
+                {
+                    await _connection.StartAsync();
+                }
+                await _connection.InvokeAsync("SetOnline", email);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"SetOnline failed: {ex.Message}");
+            }
         }
 
         public async Task SetOffline(string email)
         {
-            if (_connection.State == HubConnectionState.Disconnected)
+            if (_isDisposed) return;
+
+            try
             {
-                await _connection.StartAsync();
+                if (_connection.State == HubConnectionState.Disconnected)
+                {
+                    await _connection.StartAsync();
+                }
+                await _connection.InvokeAsync("SetOffline", email);
             }
-            await _connection.InvokeAsync("SetOffline", email);
+            catch (Exception ex)
+            {
+                MessageBox.Show($"SetOffline failed: {ex.Message}");
+            }
         }
-        public void Disconnect()
+
+        public async Task DisconnectAsync()
         {
-            _connection.StopAsync();
-            _connection.DisposeAsync();
+            if (_isDisposed) return;
+
+            try
+            {
+                await _connection.StopAsync();
+                await _connection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"DisconnectAsync failed: {ex.Message}");
+            }
+            finally
+            {
+                _isDisposed = true;
+            }
         }
     }
 }

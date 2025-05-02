@@ -19,6 +19,7 @@ public partial class LoginForm : Form
 
         string filePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Services\auth.txt"));
 
+
         if (File.Exists(filePath))
         {
             try

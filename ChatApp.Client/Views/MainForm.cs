@@ -35,11 +35,8 @@ namespace ChatApp.Client.Views
 
             this.email = email;
             MakePictureBoxCircular(ptbAvatar);
-
-            //SetOnlineStatus();
+            _statusHub = new StatusAccountHub();
             ListFriend();
-
-
         }
 
         private void ListFriend()
@@ -201,7 +198,8 @@ namespace ChatApp.Client.Views
 
             //Status
             Label statusLabel = new Label();
-            statusLabel.Text = user.Status == "Online" ? "🟢 Online" : "⚫ Offline";
+            statusLabel.Name = "StatusLabel";
+            statusLabel.Text = user.Status == "online" ? "🟢 Online" : "⚫ Offline";
             statusLabel.Font = new Font("Segoe UI", 9, FontStyle.Italic);
             statusLabel.AutoSize = true;
             statusLabel.ForeColor = user.Status == "online" ? Color.Green : Color.Gray;
@@ -217,10 +215,12 @@ namespace ChatApp.Client.Views
 
         private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //SetOfflineStatus();
-            await _statusHub.SetOffline(email);
-            _statusHub.Disconnect();
             SetOfflineStatusInDB();
+            if (_statusHub != null)
+            {
+                await _statusHub.SetOffline(email);
+                await _statusHub.DisconnectAsync();
+            }
         }
 
         private void SetOnlineStatusInDB()
@@ -268,8 +268,9 @@ namespace ChatApp.Client.Views
 
                             if (statusLabel != null)
                             {
-                                statusLabel.Text = newStatus == "Online" ? "🟢 Online" : "⚫ Offline";
-                                statusLabel.ForeColor = newStatus == "Online" ? Color.Green : Color.Gray;
+                                statusLabel.Text = newStatus == "online" ? "🟢 Online" : "⚫ Offline";
+
+                                statusLabel.ForeColor = newStatus == "online" ? Color.Green : Color.Gray;
                             }
                             break;
                         }
@@ -280,14 +281,39 @@ namespace ChatApp.Client.Views
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            _statusHub = new StatusAccountHub();
+            await _statusHub.SetOnline(email);
+            SetOnlineStatusInDB();
+
             await _statusHub.ConnectAsync((friendEmail, status) =>
             {
                 UpdateFriendStatus(friendEmail, status);
             });
+        }
 
-            await _statusHub.SetOnline(email);
-            SetOnlineStatusInDB();
+        private async void btnLogout_Click(object sender, EventArgs e)
+        {
+
+            SetOfflineStatusInDB();
+            if (_statusHub != null)
+            {
+                await _statusHub.SetOffline(email);
+                await _statusHub.DisconnectAsync();
+            }
+            string str = "";
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Services\auth.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            using (FileStream file = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+                writer.Write(str);
+            }
+
+            this.Hide();
+            using (LoginForm loginForm = new LoginForm())
+            {
+                loginForm.ShowDialog();
+            }
+            this.Close();
         }
     }
 }
