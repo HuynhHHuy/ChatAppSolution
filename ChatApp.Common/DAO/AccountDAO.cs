@@ -132,6 +132,26 @@ namespace ChatApp.Common.DAO
             return result;
         }
 
+        public UserDTO GetUserInfoByEmail(string email)
+        {
+            string query = "SELECT id, email, full_name, avatar_url, status, created_at, is_verified FROM Users WHERE email = @param0";
+            var parameters = new object[] { email };
+            var dataTable = DataProvider.Instance.ExcuteQuery(query, parameters);
 
+            var result = new UserDTO();
+            if (dataTable.Rows.Count > 0)
+            {
+                var row = dataTable.Rows[0];
+                result.Id = Convert.ToInt32(row["id"]);
+                result.Email = row["email"].ToString();
+                result.FullName = row["full_name"].ToString();
+                result.AvatarUrl = row["avatar_url"] != DBNull.Value ? row["avatar_url"].ToString() : null;
+                result.Status = row["status"].ToString();
+                result.CreatedAt = Convert.ToDateTime(row["created_at"]);
+                result.IsVerified = Convert.ToBoolean(row["is_verified"]);
+            }
+            return result;
+
+        }
     }
 }

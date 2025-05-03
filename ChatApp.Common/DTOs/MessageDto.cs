@@ -6,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace ChatApp.Common.DTOs
 {
-    public class MessageDto
+    public class MessageDTO
     {
-        public string Sender { get; set; }
-        public string Content { get; set; }
+        public int Id { get; set; }
+        public string SenderEmail { get; set; }
+        public string ReceiverEmail { get; set; }
+        public int? GroupId { get; set; }
+        public string Message { get; set; }
+        public string MessageType { get; set; }
         public DateTime SentAt { get; set; }
     }
+
 }

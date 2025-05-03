@@ -2,17 +2,6 @@
 using ChatApp.Client.Services;
 using ChatApp.Common.DAO;
 using ChatApp.Common.DTOs;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace ChatApp.Client.Views
 {
@@ -21,21 +10,21 @@ namespace ChatApp.Client.Views
         private readonly string email;
         private List<UserDTO> friends;
         private StatusAccountHub _statusHub;
+        private UserService _userService;
+        private CircularPictureBoxService _circularPictureBoxService;
 
-        //Circular avatar
-        private void MakePictureBoxCircular(PictureBox pictureBox)
-        {
-            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
-            path.AddEllipse(0, 0, pictureBox.Width - 1, pictureBox.Height - 1);
-            pictureBox.Region = new Region(path);
-        }
         public MainForm(string email)
         {
             InitializeComponent();
 
             this.email = email;
-            MakePictureBoxCircular(ptbAvatar);
+
             _statusHub = new StatusAccountHub();
+            _userService = new UserService();
+            _circularPictureBoxService = new CircularPictureBoxService();
+
+            _circularPictureBoxService.MakePictureBoxCircular(ptbAvatar);
+
             ListFriend();
         }
 
@@ -130,7 +119,7 @@ namespace ChatApp.Client.Views
                 avatar.LoadAsync(defaultAvatarUrl);
             }
 
-            MakePictureBoxCircular(avatar);
+            _circularPictureBoxService.MakePictureBoxCircular(avatar);
 
             // Tên người dùng
             Label nameLabel = new Label();
@@ -153,6 +142,7 @@ namespace ChatApp.Client.Views
 
             return panel;
         }
+
         private Panel CreateFriendPanel(UserDTO user, int top)
         {
             Panel panel = new Panel();
@@ -179,7 +169,7 @@ namespace ChatApp.Client.Views
                 avatar.LoadAsync(defaultAvatarUrl);
             }
 
-            MakePictureBoxCircular(avatar);
+            _circularPictureBoxService.MakePictureBoxCircular(avatar);
 
             // Tên người dùng
             Label nameLabel = new Label();
@@ -209,44 +199,33 @@ namespace ChatApp.Client.Views
             panel.Controls.Add(nameLabel);
             panel.Controls.Add(emailLabel);
             panel.Controls.Add(statusLabel);
+            panel.Cursor = Cursors.Hand;
+
+            panel.Click += async (s, e) =>
+            {
+                ChatRoom chatRoom = new ChatRoom(email, user.Email);
+                if (_statusHub != null)
+                {
+                    await _statusHub.DisconnectAsync();
+                }
+                this.Hide();
+                chatRoom.ShowDialog();
+                this.Close();
+            };
 
             return panel;
         }
 
         private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SetOfflineStatusInDB();
+            _userService.SetOfflineStatusInDB(email);
             if (_statusHub != null)
             {
                 await _statusHub.SetOffline(email);
                 await _statusHub.DisconnectAsync();
             }
         }
-
-        private void SetOnlineStatusInDB()
-        {
-            var updateFields = new Dictionary<string, object>
-            {
-                { "status", "online" }
-            };
-            var condition = new Dictionary<string, object>
-            {
-                { "email", email }
-            };
-            AccountDAO.Instance.UpdateFields(updateFields, condition);
-        }
-        private void SetOfflineStatusInDB()
-        {
-            var updateFields = new Dictionary<string, object>
-            {
-                { "status", "offline" }
-            };
-            var condition = new Dictionary<string, object>
-            {
-                { "email", email }
-            };
-            AccountDAO.Instance.UpdateFields(updateFields, condition);
-        }
+      
         private void UpdateFriendStatus(string email, string newStatus)
         {
             if (InvokeRequired)
@@ -282,7 +261,7 @@ namespace ChatApp.Client.Views
         private async void MainForm_Load(object sender, EventArgs e)
         {
             await _statusHub.SetOnline(email);
-            SetOnlineStatusInDB();
+            _userService.SetOnlineStatusInDB(email);
 
             await _statusHub.ConnectAsync((friendEmail, status) =>
             {
@@ -293,7 +272,7 @@ namespace ChatApp.Client.Views
         private async void btnLogout_Click(object sender, EventArgs e)
         {
 
-            SetOfflineStatusInDB();
+            _userService.SetOfflineStatusInDB(email);
             if (_statusHub != null)
             {
                 await _statusHub.SetOffline(email);
