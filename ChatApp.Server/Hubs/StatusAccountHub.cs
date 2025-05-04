@@ -27,8 +27,6 @@ namespace ChatApp.Server.Hubs
 
         public async Task SetOffline(string email)
         {
-            Console.WriteLine($"[SetOffline] {email} is now offline");
-
             UserStatuses[email] = "offline";
 
             var friends = GetUserFriends(email);

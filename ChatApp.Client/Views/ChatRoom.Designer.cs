@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChatRoom));
             tableLayoutPanel1 = new TableLayoutPanel();
             tableLayoutPanel2 = new TableLayoutPanel();
             btnSendMess = new Button();
@@ -38,11 +39,14 @@
             lbName = new Label();
             ptbAvatar = new PictureBox();
             pnMess = new Panel();
+            panel3 = new Panel();
+            btnUploadImg = new Button();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             panel2.SuspendLayout();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ptbAvatar).BeginInit();
+            panel3.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -53,6 +57,7 @@
             tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 0, 3);
             tableLayoutPanel1.Controls.Add(panel1, 0, 0);
             tableLayoutPanel1.Controls.Add(pnMess, 0, 1);
+            tableLayoutPanel1.Controls.Add(panel3, 0, 2);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -162,6 +167,26 @@
             pnMess.Size = new Size(964, 282);
             pnMess.TabIndex = 3;
             // 
+            // panel3
+            // 
+            panel3.Controls.Add(btnUploadImg);
+            panel3.Dock = DockStyle.Fill;
+            panel3.Location = new Point(4, 371);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(964, 28);
+            panel3.TabIndex = 4;
+            // 
+            // btnUploadImg
+            // 
+            btnUploadImg.FlatStyle = FlatStyle.Popup;
+            btnUploadImg.Image = (Image)resources.GetObject("btnUploadImg.Image");
+            btnUploadImg.Location = new Point(81, -3);
+            btnUploadImg.Name = "btnUploadImg";
+            btnUploadImg.Size = new Size(34, 28);
+            btnUploadImg.TabIndex = 1;
+            btnUploadImg.UseVisualStyleBackColor = true;
+            btnUploadImg.Click += btnUploadImg_Click;
+            // 
             // ChatRoom
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -180,6 +205,7 @@
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)ptbAvatar).EndInit();
+            panel3.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -195,5 +221,7 @@
         private Panel pnMess;
         private Panel panel2;
         private TextBox tbMess;
+        private Panel panel3;
+        private Button btnUploadImg;
     }
 }

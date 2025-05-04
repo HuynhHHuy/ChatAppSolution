@@ -17,13 +17,13 @@ namespace ChatApp.Client.Hub
                 .Build();
         }
 
-        public async Task ConnectAsync(Action<string, string> onMessageReceived)
+        public async Task ConnectAsync(Action<string, byte[], string> onMessageReceived)
         {
             if (_isDisposed) return;
 
-            _connection.On<string, string>("ReceiveMessage", (senderId, message) =>
+            _connection.On<string, byte[], string>("ReceiveMessage", (senderId, data, messageType) =>
             {
-                onMessageReceived?.Invoke(senderId, message);
+                onMessageReceived?.Invoke(senderId, data, messageType);
             });
 
             if (_connection.State == HubConnectionState.Disconnected)
@@ -33,7 +33,8 @@ namespace ChatApp.Client.Hub
             }
         }
 
-        public async Task SendMessageAsync(string receiverEmail, string message)
+
+        public async Task SendMessageAsync(string receiverEmail, byte[] data, string messageType)
         {
             if (_isDisposed) return;
 
@@ -43,8 +44,9 @@ namespace ChatApp.Client.Hub
                 await _connection.InvokeAsync("Register", _myEmail);
             }
 
-            await _connection.InvokeAsync("SendMessage", receiverEmail, message, _myEmail);
+            await _connection.InvokeAsync("SendMessage", receiverEmail, data, _myEmail, messageType);
         }
+
 
         public async ValueTask DisposeAsync()
         {

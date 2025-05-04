@@ -64,7 +64,7 @@ namespace ChatApp.Client.Views
         }
 
         // Handling recived message from to user
-        private void UpdateToUserMessage(string senderId, string message)
+        private void UpdateToUserMessage(string senderId, string message, string type)
         {
             Invoke((MethodInvoker)delegate
             {
@@ -73,7 +73,7 @@ namespace ChatApp.Client.Views
                     SenderEmail = senderId,
                     ReceiverEmail = _fromEmail,
                     Message = message,
-                    MessageType = "text",
+                    MessageType = type,
                     SentAt = DateTime.Now
                 };
                 AddMessageToUI(msg);
@@ -82,7 +82,7 @@ namespace ChatApp.Client.Views
 
 
         // Loading messages to UI
-        private void LoadMessagesToUI()
+        private async void LoadMessagesToUI()
         {
             var messages = MessageDAO.Instance.GetMessagesOneOnOne(_fromEmail, _toEmail);
 
@@ -97,6 +97,113 @@ namespace ChatApp.Client.Views
 
             foreach (var msg in messages)
             {
+                Control messageControl;
+
+                if (msg.MessageType == "image")
+                {
+                    PictureBox pb = new PictureBox();
+                    pb.SizeMode = PictureBoxSizeMode.Zoom;
+                    pb.Size = new Size(200, 200);
+
+                    try
+                    {
+                        if (Uri.IsWellFormedUriString(msg.Message, UriKind.Absolute))
+                        {
+                            using (var client = new HttpClient())
+                            {
+                                var imageBytes = await client.GetByteArrayAsync(msg.Message);
+                                using (var ms = new MemoryStream(imageBytes))
+                                {
+                                    pb.Image = Image.FromStream(ms);
+                                }
+                            }
+                        }
+                        else if (File.Exists(msg.Message))
+                        {
+                            pb.Image = Image.FromFile(msg.Message);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Không tìm thấy ảnh: " + msg.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Lỗi khi tải ảnh: " + ex.Message);
+                    }
+                    messageControl = pb;
+                }
+
+                else // text
+                {
+                    Label lblMsg = new Label();
+                    lblMsg.AutoSize = true;
+                    lblMsg.MaximumSize = new Size(pnMess.Width - 60, 0);
+                    lblMsg.Text = msg.Message;
+                    lblMsg.Font = new Font("Segoe UI", 10);
+                    lblMsg.BackColor = msg.SenderEmail == _fromEmail ? Color.LightBlue : Color.LightGray;
+                    lblMsg.Padding = new Padding(8);
+                    lblMsg.Margin = new Padding(0);
+                    messageControl = lblMsg;
+                }
+
+                messageControl.Left = msg.SenderEmail == _fromEmail
+                    ? pnMess.Width - messageControl.Width - 30
+                    : 10;
+                messageControl.Top = y;
+
+                pnMess.Controls.Add(messageControl);
+                y += messageControl.Height + 10;
+            }
+
+            pnMess.ResumeLayout();
+            pnMess.VerticalScroll.Value = pnMess.VerticalScroll.Maximum;
+            pnMess.PerformLayout();
+        }
+
+        private async void AddMessageToUI(MessageDTO msg)
+        {
+            pnMess.SuspendLayout();
+
+            Control messageControl;
+
+            if (msg.MessageType == "image")
+            {
+                PictureBox pb = new PictureBox();
+                pb.SizeMode = PictureBoxSizeMode.Zoom;
+                pb.Size = new Size(200, 200);
+
+                try
+                {
+                    if (Uri.IsWellFormedUriString(msg.Message, UriKind.Absolute))
+                    {
+                        using (var client = new HttpClient())
+                        {
+                            var imageBytes = await client.GetByteArrayAsync(msg.Message);
+                            using (var ms = new MemoryStream(imageBytes))
+                            {
+                                pb.Image = Image.FromStream(ms);
+                            }
+                        }
+                    }
+                    else if (File.Exists(msg.Message))
+                    {
+                        pb.Image = Image.FromFile(msg.Message);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Không tìm thấy ảnh: " + msg.Message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi tải ảnh: " + ex.Message);
+                }
+                messageControl = pb;
+            }
+
+            else
+            {
                 Label lblMsg = new Label();
                 lblMsg.AutoSize = true;
                 lblMsg.MaximumSize = new Size(pnMess.Width - 60, 0);
@@ -105,54 +212,24 @@ namespace ChatApp.Client.Views
                 lblMsg.BackColor = msg.SenderEmail == _fromEmail ? Color.LightBlue : Color.LightGray;
                 lblMsg.Padding = new Padding(8);
                 lblMsg.Margin = new Padding(0);
-
-                lblMsg.Left = msg.SenderEmail == _fromEmail
-                    ? pnMess.Width - lblMsg.PreferredWidth - 30
-                    : 10;
-                lblMsg.Top = y;
-
-                pnMess.Controls.Add(lblMsg);
-                y += lblMsg.Height + 10;
+                messageControl = lblMsg;
             }
 
-            pnMess.ResumeLayout();
-
-            pnMess.VerticalScroll.Value = pnMess.VerticalScroll.Maximum;
-            pnMess.PerformLayout();
-        }
-
-        private void AddMessageToUI(MessageDTO msg)
-        {
-            pnMess.SuspendLayout();
-
-            Label lblMsg = new Label();
-            lblMsg.AutoSize = true;
-            lblMsg.MaximumSize = new Size(pnMess.Width - 60, 0);
-            lblMsg.Text = msg.Message;
-            lblMsg.Font = new Font("Segoe UI", 10);
-            lblMsg.BackColor = msg.SenderEmail == _fromEmail ? Color.LightBlue : Color.LightGray;
-            lblMsg.Padding = new Padding(8);
-            lblMsg.Margin = new Padding(0);
-
-            // Tính toán vị trí Top mới nhất
             int y = pnMess.Controls.Count > 0
                 ? pnMess.Controls[pnMess.Controls.Count - 1].Bottom + 10
                 : 10;
 
-            lblMsg.Left = msg.SenderEmail == _fromEmail
-                ? pnMess.Width - lblMsg.PreferredWidth - 30
+            messageControl.Left = msg.SenderEmail == _fromEmail
+                ? pnMess.Width - messageControl.Width - 30
                 : 10;
-            lblMsg.Top = y;
+            messageControl.Top = y;
 
-            pnMess.Controls.Add(lblMsg);
-
+            pnMess.Controls.Add(messageControl);
             pnMess.ResumeLayout();
 
-            // Scroll tới cuối panel
             pnMess.VerticalScroll.Value = pnMess.VerticalScroll.Maximum;
             pnMess.PerformLayout();
         }
-
 
 
         // Closing the chat room
@@ -177,10 +254,20 @@ namespace ChatApp.Client.Views
                 UpdateToUserStatus(friendEmail, status);
             });
 
-            await _chatOneOnOneHub.ConnectAsync((senderId, message) =>
-            { 
-                UpdateToUserMessage(senderId, message);
+            await _chatOneOnOneHub.ConnectAsync((senderId, data, messageType) =>
+            {
+                if (messageType == "text")
+                {
+                    string message = System.Text.Encoding.UTF8.GetString(data);
+                    UpdateToUserMessage(senderId, message, "text");
+                }
+                else if (messageType == "image")
+                {
+                    string imageUrl = System.Text.Encoding.UTF8.GetString(data);
+                    UpdateToUserMessage(senderId, imageUrl, "image");
+                }
             });
+
         }
 
         // Sending message to the to user
@@ -189,15 +276,48 @@ namespace ChatApp.Client.Views
             string message = tbMess.Text.Trim();
             if (!string.IsNullOrEmpty(message))
             {
-                await _chatOneOnOneHub.SendMessageAsync(_toEmail, message);
+                byte[] data = System.Text.Encoding.UTF8.GetBytes(message);
+                await _chatOneOnOneHub.SendMessageAsync(_toEmail, data, "text");
 
                 MessageDAO.Instance.InsertMessage(_fromEmail, _toEmail, message, "text", DateTime.Now);
 
-                LoadMessagesToUI();
-
+                /*var tempMsg = new MessageDTO
+                {
+                    SenderEmail = _fromEmail,
+                    ReceiverEmail = _toEmail,
+                    Message = message,
+                    MessageType = "text",
+                    SentAt = DateTime.Now
+                };
+                AddMessageToUI(tempMsg);*/
                 tbMess.Clear();
             }
         }
 
+        private async void btnUploadImg_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = openFileDialog.FileName;
+                    byte[] imageBytes = File.ReadAllBytes(filePath);
+
+                    await _chatOneOnOneHub.SendMessageAsync(_toEmail, imageBytes, "image");
+
+                    var tempMsg = new MessageDTO
+                    {
+                        SenderEmail = _fromEmail,
+                        ReceiverEmail = _toEmail,
+                        Message = filePath,
+                        MessageType = "image",
+                        SentAt = DateTime.Now
+                    };
+
+                    AddMessageToUI(tempMsg);
+                }
+            }
+        }
     }
 }
